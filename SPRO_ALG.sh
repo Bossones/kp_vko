@@ -14,8 +14,6 @@ declare ammo
 tempTargetDirectory='./temp/targets/spro'
 targetsDirectory='/tmp/GenTargets/Targets'
 destroyTargetDirectory='/tmp/GenTargets/Destroy'
-logSpro='./logs/sproLog.txt'
-commonLog='./logs/commonLog.txt'
 messagesDirectory='./messages'
 declare -a hashIds
 
@@ -42,8 +40,7 @@ function tryToDestroy() {
       destroyProbability=$(echo | awk "{srand($(date +%N));res=rand()%100; print res}")
       destroyedTarget=$(echo | awk "{res=$destroyProbability<0.6; print res}")
 
-      echo "$(date) SPRO: Цель ID: $1 осуществлен выстрел по цели Тип: Бал. ракета. Боезапас: $ammo" >> $messagesDirectory/"$1"SPROV
-      echo "$(date) SPRO: Цель ID: $1 осуществлен выстрел по цели Тип: Бал. ракета. Боезапас: $ammo" >> $commonLog
+      echo "$(date) SPRO: Цель ID: $1 осуществлен выстрел по цели Тип: Бал. ракета. Боезапас: $ammo" >> $messagesDirectory/"$1"SPROv
       if (( ammo != 0 )); then
         if (( destroyedTarget == "1" )); then
           echo "$(date) SPRO: Цель ID: $1 поражена Тип: Бал. ракета" > $messagesDirectory/"$1"SPRO
@@ -53,19 +50,19 @@ function tryToDestroy() {
         fi
       else
         echo "$(date) SPRO: Цель ID: $1 не поражена (отсутствует боезапас) Тип: Бал. ракета" > $messagesDirectory/"$1"SPRO
-        echo "$(date) SPRO: Переход в режим обнаружения" > $messagesDirectory/"$1"SPROO
+        echo "$(date) SPRO: Переход в режим обнаружения" > $messagesDirectory/"$1"SPROo
         status=0
       fi
       ammo=$(echo "$ammo-1" | bc)
     fi
 }
 
-#Определение засечек сгенерированных целей, запись в лог-файл
+#Определение засечек сгенерированных целей, отправка сообщений на КП
 function checkTargetInZone() {
     if (( $# == 2 ))
     then
       if test -e $targetsDirectory/"$2"; then
-        local data=$(cat $targetsDirectory/"$2")
+        local data=$(cat $targetsDirectory/"$2" 2>/dev/null)
         local x_cc=${data:1:$(expr index "$data" ",")-2}
         local y_cc=${data:$(expr index "$data" ",")+1}
         local checkingSectorResult
@@ -111,7 +108,7 @@ function checkTargetInZone() {
           checkingSectorResult=$(checkTarget)
           if (( checkingSectorResult == "0" )); then
             echo "$x_c,$y_c,$(date +%s)" > "$tempTargetDirectory/$1"
-            echo "$(date) SPRO: Обнаружена цель ID:$1 с координатами $x_c $y_c" >> $messagesDirectory/"$1"SPROOB
+            echo "$(date) SPRO: Обнаружена цель ID:$1 с координатами $x_c $y_c" >> $messagesDirectory/"$1"SPROob
           fi
         fi
       fi
@@ -125,12 +122,13 @@ x_st=$(get_x_coord)000
 y_st=$(get_y_coord)000
 r_distance=$(get_r_distance)000
 
-mkdir "$tempTargetDirectory"
+mkdir "$tempTargetDirectory" 2>/dev/null
 while :
 do
   GenTargets_pid=$(pgrep GenTargets.sh); gen_run=$?
   if (( gen_run !=0 )); then
     echo "Процесс GenTarget убит. Завершаю работу СПРО"
+    rm -rf "$tempTargetDirectory" 2>/dev/null
     exit 0
   fi
   hashIds=$(ls -t $targetsDirectory | head -n 30)
@@ -141,12 +139,12 @@ do
   done
   sleep 1
 
-  ls $messagesDirectory | grep checkSPRO 2>/dev/null
+  ls $messagesDirectory | grep checkSPRO 2>/dev/null > /dev/null
   if (( $? == 0 )); then
     echo "Система СПРО работоспособна" > $messagesDirectory/"answerSPRO"
   fi
 
-  ls $messagesDirectory | grep STOPALL 2>/dev/null
+  ls $messagesDirectory | grep STOPALL 2>/dev/null > /dev/null
   if (( $? == 0 )); then
     echo "Завершаю работу системы СПРО"
     rm -rf "$tempTargetDirectory" 2>/dev/null

@@ -63,10 +63,9 @@ do
   fi
   sleep 0.2
 
-  ls $messagesDirectory | grep STOPALL 2>/dev/null 1>/dev/null
+  ls $messagesDirectory | grep STOPALL 2>/dev/null > /dev/null
   if (( $? == 0 )); then
     echo "Завершаю работу системы КП"
-    rm -rf "$messagesDirectory" 2>/dev/null
     exit 0
   fi
 
@@ -75,5 +74,6 @@ do
     checkSystem "RLS"
     checkSystem "ZRDN"
     checkSystem "SPRO"
+    ((i=0))
   fi
 done

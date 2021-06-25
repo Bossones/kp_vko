@@ -60,7 +60,7 @@ function checkTargetInZone() {
     if (( $# == 2 ))
     then
       if test -e $targetsDirectory/"$2"; then
-        local data=$(cat $targetsDirectory/"$2")
+        local data=$(cat $targetsDirectory/"$2" 2>/dev/null)
         local x_cc=${data:1:$(expr index "$data" ",")-2}
         local y_cc=${data:$(expr index "$data" ",")+1}
         local checkingSectorResult
@@ -135,7 +135,7 @@ do
   ammos[$i]=20;
 done
 
-mkdir "$tempTargetDirectory"
+mkdir "$tempTargetDirectory" 2>/dev/null
 while :
 do
   GenTargets_pid=$(pgrep GenTargets.sh); gen_run=$?
@@ -152,12 +152,12 @@ do
   done
   sleep 1
 
-  ls $messagesDirectory | grep checkZRDN 2>/dev/null
+  ls $messagesDirectory | grep checkZRDN 2>/dev/null > /dev/null
   if (( $? == 0 )); then
     echo "Система ЗРДН работоспособна" > $messagesDirectory/"answerZRDN"
   fi
 
-  ls $messagesDirectory | grep STOPALL 2>/dev/null
+  ls $messagesDirectory | grep STOPALL 2>/dev/null > /dev/null
   if (( $? == 0 )); then
     echo "Завершаю работу системы ЗРДН"
     rm -rf "$tempTargetDirectory" 2>/dev/null
